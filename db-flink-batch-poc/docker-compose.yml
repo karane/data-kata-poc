@@ -1,18 +1,55 @@
 x-flink-env: &flink-env
+  RUSTFS_BUCKET: sales-csv
   SOURCE_DB_URL: jdbc:postgresql://postgres:5432/salesdb
   SOURCE_DB_USER: poc
   SOURCE_DB_PASS: poc123
   SINK_DB_URL: jdbc:postgresql://postgres:5432/salesdb
   SINK_DB_USER: poc
   SINK_DB_PASS: poc123
-  # Date filter passed to the Flink job as --from / --to (yyyy-MM-dd).
+  # Date range passed to the Flink job as --from / --to (yyyy-MM-dd).
   # Override at runtime: JOB_FROM_DATE=2024-02-01 JOB_TO_DATE=2024-02-29 docker compose up
   JOB_FROM_DATE: "2024-02-01"
   JOB_TO_DATE: "2024-02-29"
 
 services:
 
-  # Database (source + sink — same instance, different tables)
+  # ── RustFS Object Storage (S3-compatible, simulates S3 drop zone) ────────────
+  rustfs:
+    image: rustfs/rustfs:latest
+    hostname: rustfs
+    ports:
+      - "7480:9000"   # S3 API
+      - "7481:9001"   # RustFS console
+    environment:
+      RUSTFS_ACCESS_KEY: rustfsaccess
+      RUSTFS_SECRET_KEY: rustfssecret
+      RUSTFS_CONSOLE_ENABLE: "true"
+    command: ["/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s --max-time 5 http://localhost:9000/ -o /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── CSV Generator — uploads one sales_YYYYMMDD.csv per day to RustFS ─────────
+  # Runs once on startup, exits cleanly when all files are uploaded.
+  sales-csv-generator:
+    build: ./sales-csv-generator
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    environment:
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_ACCESS_KEY: rustfsaccess
+      RUSTFS_SECRET_KEY: rustfssecret
+      RUSTFS_BUCKET: sales-csv
+      GEN_FROM_DATE: "2024-02-01"
+      GEN_TO_DATE: "2024-02-29"
+      RECORDS_PER_FILE: "30"
+      SALESMEN_COUNT: "8"
+
+  # ── Database (source + sink — same instance, different tables) ───────────────
   postgres:
     image: postgres:16
     environment:
@@ -30,10 +67,13 @@ services:
       timeout: 5s
       retries: 10
 
-  # Flink Cluster
+  # ── Flink Cluster ─────────────────────────────────────────────────────────────
+  # Both nodes enable the flink-s3-fs-hadoop plugin before starting so that
+  # FileSource can resolve s3a:// paths against RustFS.
   flink-jobmanager:
     image: flink:1.18-java11
-    command: jobmanager
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["mkdir -p /opt/flink/plugins/s3-fs-hadoop && cp /opt/flink/opt/flink-s3-fs-hadoop-*.jar /opt/flink/plugins/s3-fs-hadoop/ && /docker-entrypoint.sh jobmanager"]
     ports:
       - "8084:8081"
     environment:
@@ -41,6 +81,10 @@ services:
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager
         rest.bind-port: 8081
+        s3.access-key: rustfsaccess
+        s3.secret-key: rustfssecret
+        s3.endpoint: http://rustfs:9000
+        s3.path.style.access: true
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8081/overview"]
       interval: 15s
@@ -49,7 +93,8 @@ services:
 
   flink-taskmanager:
     image: flink:1.18-java11
-    command: taskmanager
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["mkdir -p /opt/flink/plugins/s3-fs-hadoop && cp /opt/flink/opt/flink-s3-fs-hadoop-*.jar /opt/flink/plugins/s3-fs-hadoop/ && /docker-entrypoint.sh taskmanager"]
     depends_on:
       flink-jobmanager:
         condition: service_healthy
@@ -58,9 +103,14 @@ services:
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager
         taskmanager.numberOfTaskSlots: 4
+        s3.access-key: rustfsaccess
+        s3.secret-key: rustfssecret
+        s3.endpoint: http://rustfs:9000
+        s3.path.style.access: true
 
-  # Builds the fat JAR, submits to the Flink cluster, and waits for completion
-  # Note: no -d flag — batch jobs run to completion and exit cleanly
+  # ── Job Submitter ─────────────────────────────────────────────────────────────
+  # Builds the fat JAR, submits to the cluster, and blocks until the job finishes.
+  # Waits for sales-csv-generator to finish so RustFS files are present before the job runs.
   flink-job-submit:
     build: ./flink-job
     depends_on:
@@ -70,6 +120,8 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      sales-csv-generator:
+        condition: service_completed_successfully
     environment:
       <<: *flink-env
     entrypoint: ["/bin/sh", "-c"]

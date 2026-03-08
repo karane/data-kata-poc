@@ -35,6 +35,7 @@ echo "Submitting batch job  from=$FROM  to=$TO"
 docker run --rm \
   --network db-flink-batch-poc_default \
   -v "$JAR":/job.jar \
+  -e RUSTFS_BUCKET=sales-csv \
   -e SOURCE_DB_URL=jdbc:postgresql://postgres:5432/salesdb \
   -e SOURCE_DB_USER=poc \
   -e SOURCE_DB_PASS=poc123 \
