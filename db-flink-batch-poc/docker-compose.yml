@@ -6,6 +6,7 @@ x-flink-env: &flink-env
   SINK_DB_URL: jdbc:postgresql://postgres:5432/salesdb
   SINK_DB_USER: poc
   SINK_DB_PASS: poc123
+  SALES_API_URL: http://sales-api:8080
   # Date range passed to the Flink job as --from / --to (yyyy-MM-dd).
   # Override at runtime: JOB_FROM_DATE=2024-02-01 JOB_TO_DATE=2024-02-29 docker compose up
   JOB_FROM_DATE: "2024-02-01"
@@ -13,7 +14,7 @@ x-flink-env: &flink-env
 
 services:
 
-  # ── RustFS Object Storage (S3-compatible, simulates S3 drop zone) ────────────
+  # -- RustFS Object Storage (S3-compatible, simulates S3 drop zone) 
   rustfs:
     image: rustfs/rustfs:latest
     hostname: rustfs
@@ -32,7 +33,7 @@ services:
       retries: 10
       start_period: 10s
 
-  # ── CSV Generator — uploads one sales_YYYYMMDD.csv per day to RustFS ─────────
+  # -- CSV Generator — uploads one sales_YYYYMMDD.csv per day to RustFS 
   # Runs once on startup, exits cleanly when all files are uploaded.
   sales-csv-generator:
     build: ./sales-csv-generator
@@ -49,7 +50,24 @@ services:
       RECORDS_PER_FILE: "30"
       SALESMEN_COUNT: "8"
 
-  # ── Database (source + sink — same instance, different tables) ───────────────
+  # -- Sales API — Go REST service, third data source for the batch job 
+  # Generates random sales events in memory; the Flink job polls once at runtime.
+  # SEED_INTERVAL_MS=500 pre-fills the buffer quickly before the job starts.
+  sales-api:
+    build: ./sales-api
+    ports:
+      - "8085:8080"
+    environment:
+      PORT: "8080"
+      SEED_INTERVAL_MS: "500"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  # -- Database (source + sink — same instance, different tables) 
   postgres:
     image: postgres:16
     environment:
@@ -67,9 +85,7 @@ services:
       timeout: 5s
       retries: 10
 
-  # ── Flink Cluster ─────────────────────────────────────────────────────────────
-  # Both nodes enable the flink-s3-fs-hadoop plugin before starting so that
-  # FileSource can resolve s3a:// paths against RustFS.
+  # -- Flink Cluster 
   flink-jobmanager:
     image: flink:1.18-java11
     entrypoint: ["/bin/sh", "-c"]
@@ -108,7 +124,7 @@ services:
         s3.endpoint: http://rustfs:9000
         s3.path.style.access: true
 
-  # ── Job Submitter ─────────────────────────────────────────────────────────────
+  # -- Job Submitter 
   # Builds the fat JAR, submits to the cluster, and blocks until the job finishes.
   # Waits for sales-csv-generator to finish so RustFS files are present before the job runs.
   flink-job-submit:
@@ -122,6 +138,8 @@ services:
         condition: service_healthy
       sales-csv-generator:
         condition: service_completed_successfully
+      sales-api:
+        condition: service_healthy
     environment:
       <<: *flink-env
     entrypoint: ["/bin/sh", "-c"]

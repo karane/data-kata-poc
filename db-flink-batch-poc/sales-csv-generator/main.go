@@ -6,7 +6,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/brianvoe/gofakeit/v6"
 )
 
 type Config struct {
@@ -48,9 +48,6 @@ var cityRegions = []CityRegion{
 	{"Las Vegas", "Southwest"},
 }
 
-var firstNames = []string{"Alice", "Bob", "Carol", "David", "Eva", "Frank", "Grace", "Henry", "Iris", "Jack"}
-var lastNames = []string{"Johnson", "Williams", "Davis", "Brown", "Martinez", "Wilson", "Taylor", "Anderson", "Thomas", "Harris"}
-
 func loadConfig() Config {
 	return Config{
 		RustFSEndpoint: envOrDefault("RUSTFS_ENDPOINT", "http://rustfs:9000"),
@@ -69,7 +66,7 @@ func buildSalesmenPool(n int) []Salesman {
 	for i := range pool {
 		pool[i] = Salesman{
 			ID:   fmt.Sprintf("SM%03d", i+1),
-			Name: firstNames[i%len(firstNames)] + " " + lastNames[(i+3)%len(lastNames)],
+			Name: gofakeit.FirstName() + " " + gofakeit.LastName(),
 		}
 	}
 	return pool
@@ -91,11 +88,11 @@ func generateCSV(date time.Time, salesmen []Salesman, recordsPerFile int) []byte
 	}
 
 	for i := 0; i < recordsPerFile; i++ {
-		sm := salesmen[rand.Intn(len(salesmen))]
-		cr := cityRegions[rand.Intn(len(cityRegions))]
-		product := products[rand.Intn(len(products))]
-		amount := 100.0 + rand.Float64()*4900.0
-		eventTime := dayStart + rand.Int63n(dayRange)
+		sm := salesmen[gofakeit.IntRange(0, len(salesmen)-1)]
+		cr := cityRegions[gofakeit.IntRange(0, len(cityRegions)-1)]
+		product := products[gofakeit.IntRange(0, len(products)-1)]
+		amount := gofakeit.Price(100, 5000)
+		eventTime := dayStart + int64(gofakeit.IntRange(0, int(dayRange)-1))
 		saleID := fmt.Sprintf("RUSTFS%s%05d", date.Format("20060102"), i+1)
 
 		_ = w.Write([]string{

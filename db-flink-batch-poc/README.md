@@ -1,7 +1,14 @@
 # db-flink-batch-poc
 
-Batch version of [db-flink-poc](../db-flink-poc). Same PostgreSQL → Flink → PostgreSQL
-pipeline, but runs **once** against a bounded dataset instead of continuously polling for new records.
+Batch sales-rankings pipeline with **three sources**:
+
+| Source | Description |
+|---|---|
+| RustFS (S3-compatible) | Daily `sales_YYYYMMDD.csv` files, one per day in `[--from, --to]` |
+| PostgreSQL | `source_sales` table, date-filtered JDBC query |
+| HTTP / sales-api | Go REST service — polled once at job start via `GET /api/sales/events` |
+
+All events are unioned, then aggregated into city and salesman rankings written to PostgreSQL.
 
 ## Services & ports
 
@@ -9,6 +16,8 @@ pipeline, but runs **once** against a bounded dataset instead of continuously po
 |---|---|
 | Flink UI | [localhost:8084](http://localhost:8084) |
 | PostgreSQL | localhost:5434 |
+| RustFS console | [localhost:7481](http://localhost:7481) |
+| sales-api | [localhost:8085](http://localhost:8085) |
 
 ## Start
 
@@ -37,7 +46,7 @@ and you want to submit jobs manually with different date ranges.
 **1. Start the cluster (skip the job-submit service):**
 
 ```bash
-docker compose up postgres flink-jobmanager flink-taskmanager -d
+docker compose up rustfs postgres sales-api sales-csv-generator flink-jobmanager flink-taskmanager -d
 ```
 
 **2. Build the fat JAR:**
@@ -84,7 +93,7 @@ Open **[http://localhost:8084](http://localhost:8084)** while the cluster is run
 |---|---|---|
 | Running jobs | **Jobs → Running Jobs** | Job appears here while `submit.sh` / `flink-job-submit` is blocking |
 | Completed jobs | **Jobs → Completed Jobs** | Job moves here on success (green) or failure (red) |
-| Job graph | Click the job → **Overview** tab | Shows the two parallel pipelines (Stream A: City, Stream B: Salesman) |
+| Job graph | Click the job → **Overview** tab | Shows three sources (RustFS, JDBC, HTTP) unioned into two parallel pipelines (Stream A: City, Stream B: Salesman) |
 | Task metrics | Click a task node → **Metrics** tab | Records in/out, throughput |
 | Logs | Click a task node → **TaskManagers** tab → select TM → **Logs** | Full Flink execution logs including `[BatchJob]` lines |
 | Exceptions | Click the job → **Exceptions** tab | Full stack trace if the job failed |

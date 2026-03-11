@@ -5,6 +5,7 @@ import com.poc.BatchJob.SalesmanAcc;
 import com.poc.model.SaleEvent;
 import com.poc.model.SalesRank;
 import com.poc.source.CsvSaleEventFormat;
+import com.poc.source.HttpSalesBatchSource;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -34,6 +35,7 @@ import java.util.List;
  * Sources:
  *   1. RustFS (S3-compatible)  sales_YYYYMMDD.csv files  ← one file per day in [from, to]
  *   2. PostgreSQL              source_sales table        ← date-filtered JDBC query
+ *   3. HTTP / sales-api        Go REST service           ← polled once at job start
  *
  * Streams:
  *   A. Total Sales per City    (keyBy city       --> reduce)
@@ -45,7 +47,8 @@ import java.util.List;
  * Configuration via environment variables (set in docker-compose.yml):
  *   RUSTFS_BUCKET,
  *   SOURCE_DB_URL, SOURCE_DB_USER, SOURCE_DB_PASS,
- *   SINK_DB_URL,   SINK_DB_USER,   SINK_DB_PASS
+ *   SINK_DB_URL,   SINK_DB_USER,   SINK_DB_PASS,
+ *   SALES_API_URL  (default: http://sales-api:8080)
  *
  * Required CLI arguments:
  *   --from  yyyy-MM-dd   inclusive lower bound — selects RustFS files and DB rows
@@ -66,6 +69,7 @@ public class BatchJob {
         String sinkDbUrl    = env("SINK_DB_URL",    "jdbc:postgresql://postgres:5432/salesdb");
         String sinkDbUser   = env("SINK_DB_USER",   "poc");
         String sinkDbPass   = env("SINK_DB_PASS",   "poc123");
+        String salesApiUrl  = env("SALES_API_URL",  "http://sales-api:8080");
 
         // Parse --from / --to CLI arguments (yyyy-MM-dd or epoch ms) — both required
         String fromStr = null;
@@ -141,8 +145,16 @@ public class BatchJob {
         DataStream<SaleEvent> fromDb = env
             .fromSource(jdbcSource, WatermarkStrategy.noWatermarks(), "Source: JDBC/DB");
 
-        // UNION -- merge both sources into one bounded stream
-        DataStream<SaleEvent> allSales = fromRustFS.union(fromDb);
+        // SOURCE 3 -- HTTP / sales-api
+        // Fetched eagerly before graph construction so fromCollection() is used,
+        // which is a proper bounded source compatible with BATCH execution mode.
+        List<SaleEvent> apiEvents = HttpSalesBatchSource.fetchAll(salesApiUrl);
+        DataStream<SaleEvent> fromApi = env
+            .fromCollection(apiEvents, TypeInformation.of(SaleEvent.class))
+            .name("Source: HTTP/API");
+
+        // UNION -- merge all three sources into one bounded stream
+        DataStream<SaleEvent> allSales = fromRustFS.union(fromDb, fromApi);
 
         // STREAM A -- Total Sales per City
         // keyBy city --> reduce --> map to SalesRank(CITY)
