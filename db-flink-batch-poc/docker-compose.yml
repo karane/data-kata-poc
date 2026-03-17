@@ -87,11 +87,12 @@ services:
 
   # -- Flink Cluster 
   flink-jobmanager:
-    image: flink:1.18-java11
+    build: ./monitoring/flink-with-prometheus
     entrypoint: ["/bin/sh", "-c"]
     command: ["mkdir -p /opt/flink/plugins/s3-fs-hadoop && cp /opt/flink/opt/flink-s3-fs-hadoop-*.jar /opt/flink/plugins/s3-fs-hadoop/ && /docker-entrypoint.sh jobmanager"]
     ports:
       - "8084:8081"
+      - "9249:9249"
     environment:
       <<: *flink-env
       FLINK_PROPERTIES: |
@@ -101,6 +102,8 @@ services:
         s3.secret-key: rustfssecret
         s3.endpoint: http://rustfs:9000
         s3.path.style.access: true
+        metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+        metrics.reporter.prom.port: 9249
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8081/overview"]
       interval: 15s
@@ -108,7 +111,7 @@ services:
       retries: 10
 
   flink-taskmanager:
-    image: flink:1.18-java11
+    build: ./monitoring/flink-with-prometheus
     entrypoint: ["/bin/sh", "-c"]
     command: ["mkdir -p /opt/flink/plugins/s3-fs-hadoop && cp /opt/flink/opt/flink-s3-fs-hadoop-*.jar /opt/flink/plugins/s3-fs-hadoop/ && /docker-entrypoint.sh taskmanager"]
     depends_on:
@@ -123,8 +126,37 @@ services:
         s3.secret-key: rustfssecret
         s3.endpoint: http://rustfs:9000
         s3.path.style.access: true
+        metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+        metrics.reporter.prom.port: 9249
 
-  # -- Job Submitter 
+  # -- Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  # -- Job Submitter
   # Builds the fat JAR, submits to the cluster, and blocks until the job finishes.
   # Waits for sales-csv-generator to finish so RustFS files are present before the job runs.
   flink-job-submit:
@@ -147,3 +179,5 @@ services:
 
 volumes:
   postgres-data:
+  prometheus-data:
+  grafana-data:
