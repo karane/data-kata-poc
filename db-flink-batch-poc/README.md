@@ -47,7 +47,7 @@ and you want to submit jobs manually with different date ranges.
 **1. Start the cluster (skip the job-submit service):**
 
 ```bash
-docker compose up rustfs postgres sales-api sales-csv-generator flink-jobmanager flink-taskmanager -d
+docker compose up rustfs postgres sales-api sales-csv-generator flink-jobmanager flink-taskmanager atlas -d
 ```
 
 **2. Build the fat JAR:**
