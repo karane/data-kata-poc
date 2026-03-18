@@ -10,21 +10,6 @@ Batch sales-rankings pipeline with **three sources**:
 
 All events are unioned, then aggregated into city and salesman rankings written to a separate PostgreSQL sink instance.
 
-## Architecture
-
-```
-RustFS (CSV)  ─┐
-               ├─► Flink Batch Job ─► postgres-sink (sales_ranks)
-postgres-source┤
-  (source_sales)│
-               │
-sales-api (HTTP)┘
-```
-
-Two PostgreSQL instances:
-- **postgres-source** — `source_sales` table with seed data (read by Flink)
-- **postgres-sink** — `sales_ranks` table + views (written by Flink)
-
 ## Services & ports
 
 | Service | Port |
