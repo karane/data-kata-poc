@@ -6,9 +6,13 @@ import com.poc.model.SaleEvent;
 import com.poc.model.SalesRank;
 import com.poc.source.CsvSaleEventFormat;
 import com.poc.source.HttpSalesBatchSource;
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.api.common.accumulators.LongCounter;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
@@ -140,10 +144,14 @@ public class BatchJob {
         env.setRuntimeMode(RuntimeExecutionMode.BATCH);
 
         DataStream<SaleEvent> fromRustFS = env
-            .fromSource(rustfsSource, WatermarkStrategy.noWatermarks(), "Source: RustFS/CSV");
+            .fromSource(rustfsSource, WatermarkStrategy.noWatermarks(), "Source: RustFS/CSV")
+            .map(new CountingMap<>("records_from_s3"))
+            .returns(TypeInformation.of(SaleEvent.class));
 
         DataStream<SaleEvent> fromDb = env
-            .fromSource(jdbcSource, WatermarkStrategy.noWatermarks(), "Source: JDBC/DB");
+            .fromSource(jdbcSource, WatermarkStrategy.noWatermarks(), "Source: JDBC/DB")
+            .map(new CountingMap<>("records_from_db"))
+            .returns(TypeInformation.of(SaleEvent.class));
 
         // SOURCE 3 -- HTTP / sales-api
         // Fetched eagerly before graph construction so fromCollection() is used,
@@ -179,6 +187,8 @@ public class BatchJob {
                 return r;
             })
             .returns(TypeInformation.of(SalesRank.class)) // to enforce type info
+            .map(new CountingMap<>("records_city_out"))
+            .returns(TypeInformation.of(SalesRank.class))
             .name("Stream A: Total Sales per City");
 
         // STREAM B -- Total Sales per Salesman (country-wide)
@@ -204,6 +214,8 @@ public class BatchJob {
                 return r;
             })
             .returns(TypeInformation.of(SalesRank.class)) // to enforce type info
+            .map(new CountingMap<>("records_salesman_out"))
+            .returns(TypeInformation.of(SalesRank.class))
             .name("Stream B: Total Sales per Salesman");
 
         // SINK -- PostgreSQL (both streams --> same table, different rank_type)
@@ -259,7 +271,29 @@ public class BatchJob {
             )
         ).name("Sink: Salesman Totals --> PostgreSQL");
 
-        env.execute("Sales Rankings Batch Job");
+        long startMs = System.currentTimeMillis();
+        JobExecutionResult result = env.execute("Sales Rankings Batch Job");
+        long durationMs = System.currentTimeMillis() - startMs;
+
+        String metricsFilePath = env("METRICS_FILE", "");
+        if (!metricsFilePath.isEmpty()) {
+            Long dbCount     = result.getAccumulatorResult("records_from_db");
+            Long s3Count     = result.getAccumulatorResult("records_from_s3");
+            Long cityOut     = result.getAccumulatorResult("records_city_out");
+            Long salesmanOut = result.getAccumulatorResult("records_salesman_out");
+            long written = (cityOut != null ? cityOut : 0L) + (salesmanOut != null ? salesmanOut : 0L);
+            String json = String.format(
+                "{\"recordsFromDb\":%d,\"recordsFromS3\":%d,\"recordsFromApi\":%d,\"recordsWritten\":%d,\"durationMs\":%d}",
+                dbCount != null ? dbCount : 0L,
+                s3Count != null ? s3Count : 0L,
+                (long) apiEvents.size(),
+                written,
+                durationMs);
+            try (java.io.FileWriter fw = new java.io.FileWriter(metricsFilePath)) {
+                fw.write(json);
+            }
+            log.info("[BatchJob] Metrics written to {}: {}", metricsFilePath, json);
+        }
     }
 
     private static long parseDate(String s) {
@@ -322,6 +356,25 @@ public class BatchJob {
             this.total        = total;
             this.minTime      = minTime;
             this.maxTime      = maxTime;
+        }
+    }
+
+    public static class CountingMap<T> extends RichMapFunction<T, T> {
+        private final String accName;
+        private transient LongCounter counter;
+
+        public CountingMap(String accName) { this.accName = accName; }
+
+        @Override
+        public void open(Configuration params) {
+            counter = new LongCounter();
+            getRuntimeContext().addAccumulator(accName, counter);
+        }
+
+        @Override
+        public T map(T value) {
+            counter.add(1L);
+            return value;
         }
     }
 }
