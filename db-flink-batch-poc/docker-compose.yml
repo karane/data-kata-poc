@@ -168,8 +168,9 @@ services:
       ATLAS_RUSTFS_PORT: "9000"
       ATLAS_SALES_API_HOST: sales-api
       ATLAS_SALES_API_PORT: "8080"
+      METRICS_FILE: /tmp/job-metrics.json
     entrypoint: ["/bin/sh", "-c"]
-    command: ["echo 'Submitting batch job...' && flink run -m flink-jobmanager:8081 -c com.poc.BatchJob /opt/flink/usrlib/flink-job.jar --from $$JOB_FROM_DATE --to $$JOB_TO_DATE && echo 'Batch job completed.' && java -cp /opt/flink/usrlib/flink-job.jar com.poc.LineageReporter --from $$JOB_FROM_DATE --to $$JOB_TO_DATE --run-id $$(date +%s%3N)"]
+    command: ["echo 'Submitting batch job...' && flink run -m flink-jobmanager:8081 -c com.poc.BatchJob /opt/flink/usrlib/flink-job.jar --from $$JOB_FROM_DATE --to $$JOB_TO_DATE && echo 'Batch job completed.' && java -cp /opt/flink/usrlib/flink-job.jar com.poc.LineageReporter --from $$JOB_FROM_DATE --to $$JOB_TO_DATE --run-id $$(date +%s%3N) --metrics-file /tmp/job-metrics.json"]
 
 volumes:
   postgres-data:
