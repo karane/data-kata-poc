@@ -1,0 +1,24 @@
+# Binaries
+go-ingestion
+*.exe
+
+# Data files (keep structure, ignore actual data)
+data/inbox/.gitkeep
+!data/inbox/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/failed/*
+!data/failed/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/
