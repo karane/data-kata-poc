@@ -16,9 +16,10 @@ public class LineageReporter {
     private static String auth;
 
     public static void main(String[] args) throws Exception {
-        String from  = arg(args, "--from");
-        String to    = arg(args, "--to");
-        String runId = arg(args, "--run-id");
+        String from          = arg(args, "--from");
+        String to            = arg(args, "--to");
+        String runId         = arg(args, "--run-id");
+        String metricsFile   = arg(args, "--metrics-file");
         if (from == null || to == null || runId == null) {
             throw new IllegalArgumentException("--from, --to and --run-id are required");
         }
@@ -41,10 +42,15 @@ public class LineageReporter {
         String apiQn  = "http://" + apiHostPort + "/api/sales/events#GET";
         String apiUrl = "http://" + apiHostPort + "/api/sales/events";
 
+        JobMetrics metrics = null;
+        if (metricsFile != null) {
+            metrics = MAPPER.readValue(new java.io.File(metricsFile), JobMetrics.class);
+        }
+
         ensureTypes();
         upsertDatasets(pgQn, s3Qn, apiQn, apiUrl);
         upsertViewLineage(pgQn);
-        createProcess(from, to, runId, pgQn, s3Qn, apiQn);
+        createProcess(from, to, runId, pgQn, s3Qn, apiQn, metrics);
 
         System.out.println("[LineageReporter] Lineage recorded: run=" + runId
             + "  from=" + from + "  to=" + to);
@@ -57,14 +63,37 @@ public class LineageReporter {
             attrDef("method", "string", true)
         ));
 
+        Map<String, Object> flinkJobDef = new LinkedHashMap<>();
+        flinkJobDef.put("name",          "poc_flink_job");
+        flinkJobDef.put("superTypes",    List.of("Process"));
+        flinkJobDef.put("serviceType",   "poc");
+        flinkJobDef.put("typeVersion",   "1.0");
+        flinkJobDef.put("attributeDefs", List.of(
+            attrDef("recordsFromDb",  "long", true),
+            attrDef("recordsFromS3",  "long", true),
+            attrDef("recordsFromApi", "long", true),
+            attrDef("recordsWritten", "long", true),
+            attrDef("durationMs",     "long", true)
+        ));
+
         int s = post("/api/atlas/v2/types/typedefs", Map.of("entityDefs", List.of(
             simpleDef("poc_db_table"),
             simpleDef("poc_s3_bucket"),
-            httpDef
+            httpDef,
+            flinkJobDef
         )));
-        if (s != 200 && s != 201 && s != 409) {
-            throw new RuntimeException("Failed to register custom types, HTTP " + s);
+        if (s == 200 || s == 201) return;
+
+        if (s == 409) {
+            // Batch rejected because some types already exist; register poc_flink_job individually
+            int s2 = post("/api/atlas/v2/types/typedefs", Map.of("entityDefs", List.of(flinkJobDef)));
+            if (s2 != 200 && s2 != 201 && s2 != 409) {
+                throw new RuntimeException("Failed to register poc_flink_job type, HTTP " + s2);
+            }
+            return;
         }
+
+        throw new RuntimeException("Failed to register custom types, HTTP " + s);
     }
 
     private static void upsertDatasets(String pgQn, String s3Qn,
@@ -109,7 +138,8 @@ public class LineageReporter {
     }
 
     private static void createProcess(String from, String to, String runId,
-                                      String pgQn, String s3Qn, String apiQn) throws Exception {
+                                      String pgQn, String s3Qn, String apiQn,
+                                      JobMetrics metrics) throws Exception {
         String qn = "flink://batch-job/sales-ranking/"
                   + from.replace("-", "") + "_" + to.replace("-", "") + "/" + runId;
 
@@ -125,9 +155,16 @@ public class LineageReporter {
         attrs.put("outputs", List.of(
             ref("poc_db_table", pgQn + "/sales_ranks")
         ));
+        if (metrics != null) {
+            attrs.put("recordsFromDb",  metrics.recordsFromDb);
+            attrs.put("recordsFromS3",  metrics.recordsFromS3);
+            attrs.put("recordsFromApi", metrics.recordsFromApi);
+            attrs.put("recordsWritten", metrics.recordsWritten);
+            attrs.put("durationMs",     metrics.durationMs);
+        }
 
         int s = post("/api/atlas/v2/entity/bulk",
-            Map.of("entities", List.of(Map.of("typeName", "Process", "attributes", attrs))));
+            Map.of("entities", List.of(Map.of("typeName", "poc_flink_job", "attributes", attrs))));
         if (s != 200 && s != 201) {
             throw new RuntimeException("Failed to create Process entity, HTTP " + s);
         }
@@ -181,6 +218,17 @@ public class LineageReporter {
         return http.send(req, HttpResponse.BodyHandlers.discarding()).statusCode();
     }
 
+    private static int put(String path, Object body) throws Exception {
+        String json = MAPPER.writeValueAsString(body);
+        HttpRequest req = HttpRequest.newBuilder()
+            .uri(URI.create(atlasBase + path))
+            .header("Content-Type", "application/json")
+            .header("Authorization", auth)
+            .PUT(HttpRequest.BodyPublishers.ofString(json))
+            .build();
+        return http.send(req, HttpResponse.BodyHandlers.discarding()).statusCode();
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static String arg(String[] args, String key) {
@@ -197,5 +245,13 @@ public class LineageReporter {
 
     private static String basicAuth(String user, String pass) {
         return "Basic " + Base64.getEncoder().encodeToString((user + ":" + pass).getBytes());
+    }
+
+    private static class JobMetrics {
+        public long recordsFromDb;
+        public long recordsFromS3;
+        public long recordsFromApi;
+        public long recordsWritten;
+        public long durationMs;
     }
 }
