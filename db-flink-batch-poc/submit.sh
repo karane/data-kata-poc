@@ -31,10 +31,16 @@ if [[ ! -f "$JAR" ]]; then
   exit 1
 fi
 
+METRICS_DIR="$(pwd)/flink-job/target"
+METRICS_FILE="$METRICS_DIR/job-metrics.json"
+rm -f "$METRICS_FILE"
+
 echo "Submitting batch job  from=$FROM  to=$TO"
 docker run --rm \
   --network db-flink-batch-poc_default \
   -v "$JAR":/job.jar \
+  -v "$METRICS_DIR":/metrics \
+  -e METRICS_FILE=/metrics/job-metrics.json \
   -e RUSTFS_BUCKET=sales-csv \
   -e SOURCE_DB_URL=jdbc:postgresql://postgres:5432/salesdb \
   -e SOURCE_DB_USER=poc \
@@ -45,5 +51,18 @@ docker run --rm \
   flink:1.18-java11 \
   flink run -m flink-jobmanager:8081 -c com.poc.BatchJob /job.jar \
     --from "$FROM" --to "$TO"
+
+RUN_ID="$(date +%s)000"
+echo "Recording lineage (run=$RUN_ID) ..."
+docker run --rm \
+  --network db-flink-batch-poc_default \
+  -v "$JAR":/job.jar \
+  -v "$METRICS_FILE":/metrics/job-metrics.json:ro \
+  -e ATLAS_URL=http://atlas:21000 \
+  -e ATLAS_USER=admin \
+  -e ATLAS_PASS=admin \
+  flink:1.18-java11 \
+  java -cp /job.jar com.poc.LineageReporter \
+    --from "$FROM" --to "$TO" --run-id "$RUN_ID" --metrics-file /metrics/job-metrics.json
 
 echo "Done."
