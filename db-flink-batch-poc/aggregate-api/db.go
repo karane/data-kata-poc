@@ -63,7 +63,7 @@ func (p *PostgresStore) TopSalesman() (Salesman, error) {
 		FROM top_salesmen_latest
 		WHERE window_end = (SELECT MAX(window_end) FROM top_salesmen_latest)
 		ORDER BY rank ASC
-		LIMIT 1;
+		LIMIT 10;
 	`)
 
 	var s Salesman
