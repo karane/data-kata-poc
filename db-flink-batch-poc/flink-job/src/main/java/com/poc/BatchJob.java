@@ -12,9 +12,9 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
-import org.apache.flink.connector.jdbc.JdbcSink;
-import org.apache.flink.connector.jdbc.source.JdbcSource;
-import org.apache.flink.connector.jdbc.source.reader.extractor.ResultExtractor;
+import org.apache.flink.connector.jdbc.core.datastream.sink.JdbcSink;
+import org.apache.flink.connector.jdbc.core.datastream.source.JdbcSource;
+import org.apache.flink.connector.jdbc.core.datastream.source.reader.extractor.ResultExtractor;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -227,36 +227,32 @@ public class BatchJob {
             "ON CONFLICT (rank_type, group_key, window_end) " +
             "DO UPDATE SET total_sales = EXCLUDED.total_sales";
 
-        topSalesPerCity.addSink(
-            JdbcSink.sink(
-                upsertSql,
-                (stmt, r) -> {
+        topSalesPerCity.sinkTo(
+            JdbcSink.<SalesRank>builder()
+                .withQueryStatement(upsertSql, (stmt, r) -> {
                     stmt.setString(1, r.rankType);
                     stmt.setString(2, r.groupKey);
                     stmt.setString(3, r.entityId);   // null for CITY
                     stmt.setDouble(4, r.totalSales);
                     stmt.setTimestamp(5, r.windowStart);
                     stmt.setTimestamp(6, r.windowEnd);
-                },
-                jdbcExecOpts,
-                jdbcConnOpts
-            )
+                })
+                .withExecutionOptions(jdbcExecOpts)
+                .buildAtLeastOnce(jdbcConnOpts)
         ).name("Sink: City Totals --> PostgreSQL");
 
-        topSalesmanCountry.addSink(
-            JdbcSink.sink(
-                upsertSql,
-                (stmt, r) -> {
+        topSalesmanCountry.sinkTo(
+            JdbcSink.<SalesRank>builder()
+                .withQueryStatement(upsertSql, (stmt, r) -> {
                     stmt.setString(1, r.rankType);
                     stmt.setString(2, r.groupKey);
                     stmt.setString(3, r.entityId);
                     stmt.setDouble(4, r.totalSales);
                     stmt.setTimestamp(5, r.windowStart);
                     stmt.setTimestamp(6, r.windowEnd);
-                },
-                jdbcExecOpts,
-                jdbcConnOpts
-            )
+                })
+                .withExecutionOptions(jdbcExecOpts)
+                .buildAtLeastOnce(jdbcConnOpts)
         ).name("Sink: Salesman Totals --> PostgreSQL");
 
         env.execute("Sales Rankings Batch Job");

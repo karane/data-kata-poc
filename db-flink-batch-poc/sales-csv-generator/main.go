@@ -124,7 +124,6 @@ func run(cfg Config) error {
 	// Ensure bucket exists (RustFS doesn't auto-create)
 	_, err := client.CreateBucket(ctx, &s3.CreateBucketInput{Bucket: aws.String(cfg.Bucket)})
 	if err != nil {
-		// Ignore "already exists" errors
 		errStr := err.Error()
 		if !strings.Contains(errStr, "BucketAlreadyOwnedByYou") && !strings.Contains(errStr, "BucketAlreadyExists") {
 			return fmt.Errorf("create bucket %s: %w", cfg.Bucket, err)

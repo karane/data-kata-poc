@@ -101,7 +101,6 @@ func seedLoop(intervalMs int) {
 			events = events[len(events)-200:]
 		}
 		mu.Unlock()
-		log.Printf("[seed] generated %s  city=%s  amount=%.2f", e.SaleID, e.City, e.Amount)
 	}
 }
 
