@@ -1,0 +1,55 @@
+2026-03-16 22:26:57
+org.apache.flink.runtime.client.JobInitializationException: Could not start the JobMaster.
+	at org.apache.flink.runtime.jobmaster.DefaultJobMasterServiceProcess.lambda$new$0(DefaultJobMasterServiceProcess.java:97)
+	at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(Unknown Source)
+	at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(Unknown Source)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(Unknown Source)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(Unknown Source)
+	at org.apache.flink.util.MdcUtils.lambda$wrapRunnable$1(MdcUtils.java:70)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.Thread.run(Unknown Source)
+Caused by: java.util.concurrent.CompletionException: java.lang.RuntimeException: org.apache.flink.util.FlinkException: Could not instantiate class 'io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory=' of type 'org.apache.flink.core.execution.JobStatusChangedListenerFactory'. Please make sure that this class is on your class path.
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(Unknown Source)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(Unknown Source)
+	... 5 more
+Caused by: java.lang.RuntimeException: org.apache.flink.util.FlinkException: Could not instantiate class 'io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory=' of type 'org.apache.flink.core.execution.JobStatusChangedListenerFactory'. Please make sure that this class is on your class path.
+	at org.apache.flink.core.execution.JobStatusChangedListenerUtils.lambda$createJobStatusChangedListeners$0(JobStatusChangedListenerUtils.java:74)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(Unknown Source)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(Unknown Source)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(Unknown Source)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(Unknown Source)
+	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(Unknown Source)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(Unknown Source)
+	at java.base/java.util.stream.ReferencePipeline.collect(Unknown Source)
+	at org.apache.flink.core.execution.JobStatusChangedListenerUtils.createJobStatusChangedListeners(JobStatusChangedListenerUtils.java:77)
+	at org.apache.flink.runtime.executiongraph.DefaultExecutionGraphBuilder.buildGraph(DefaultExecutionGraphBuilder.java:147)
+	at org.apache.flink.runtime.scheduler.DefaultExecutionGraphFactory.createAndRestoreExecutionGraph(DefaultExecutionGraphFactory.java:155)
+	at org.apache.flink.runtime.scheduler.SchedulerBase.createAndRestoreExecutionGraph(SchedulerBase.java:430)
+	at org.apache.flink.runtime.scheduler.SchedulerBase.<init>(SchedulerBase.java:255)
+	at org.apache.flink.runtime.scheduler.DefaultScheduler.<init>(DefaultScheduler.java:144)
+	at org.apache.flink.runtime.scheduler.adaptivebatch.AdaptiveBatchScheduler.<init>(AdaptiveBatchScheduler.java:178)
+	at org.apache.flink.runtime.scheduler.adaptivebatch.AdaptiveBatchSchedulerFactory.createScheduler(AdaptiveBatchSchedulerFactory.java:319)
+	at org.apache.flink.runtime.scheduler.adaptivebatch.AdaptiveBatchSchedulerFactory.createInstance(AdaptiveBatchSchedulerFactory.java:176)
+	at org.apache.flink.runtime.jobmaster.DefaultSlotPoolServiceSchedulerFactory.createScheduler(DefaultSlotPoolServiceSchedulerFactory.java:131)
+	at org.apache.flink.runtime.jobmaster.JobMaster.createScheduler(JobMaster.java:419)
+	at org.apache.flink.runtime.jobmaster.JobMaster.<init>(JobMaster.java:396)
+	at org.apache.flink.runtime.jobmaster.factories.DefaultJobMasterServiceFactory.internalCreateJobMasterService(DefaultJobMasterServiceFactory.java:128)
+	at org.apache.flink.runtime.jobmaster.factories.DefaultJobMasterServiceFactory.lambda$createJobMasterService$0(DefaultJobMasterServiceFactory.java:100)
+	at org.apache.flink.util.function.FunctionUtils.lambda$uncheckedSupplier$4(FunctionUtils.java:112)
+	... 5 more
+Caused by: org.apache.flink.util.FlinkException: Could not instantiate class 'io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory=' of type 'org.apache.flink.core.execution.JobStatusChangedListenerFactory'. Please make sure that this class is on your class path.
+	at org.apache.flink.util.InstantiationUtil.instantiate(InstantiationUtil.java:256)
+	at org.apache.flink.core.execution.JobStatusChangedListenerUtils.lambda$createJobStatusChangedListeners$0(JobStatusChangedListenerUtils.java:52)
+	... 27 more
+Caused by: java.lang.ClassNotFoundException: io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory=
+	at java.base/java.net.URLClassLoader.findClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	at org.apache.flink.util.FlinkUserCodeClassLoader.loadClassWithoutExceptionHandling(FlinkUserCodeClassLoader.java:67)
+	at org.apache.flink.util.FlinkUserCodeClassLoader.loadClass(FlinkUserCodeClassLoader.java:51)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	at org.apache.flink.util.FlinkUserCodeClassLoaders$SafetyNetWrapperClassLoader.loadClass(FlinkUserCodeClassLoaders.java:197)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Unknown Source)
+	at org.apache.flink.util.InstantiationUtil.instantiate(InstantiationUtil.java:253)
+	... 28 more
