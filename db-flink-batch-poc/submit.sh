@@ -42,7 +42,7 @@ docker run --rm \
   -e SINK_DB_URL=jdbc:postgresql://postgres-sink:5432/salesdb \
   -e SINK_DB_USER=poc \
   -e SINK_DB_PASS=poc123 \
-  flink:1.18-java17 \
+  flink:2.0-java17 \
   flink run -m flink-jobmanager:8081 -c com.poc.BatchJob /job.jar \
     --from "$FROM" --to "$TO"
 

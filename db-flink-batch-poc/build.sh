@@ -9,7 +9,7 @@ docker run --rm \
   -v "$(pwd)/flink-job":/app \
   -v "$HOME/.m2":/root/.m2 \
   -w /app \
-  maven:3.9-eclipse-temurin-11 \
+  maven:3.9-eclipse-temurin-17 \
   mvn package -DskipTests -q
 
 echo "JAR ready: flink-job/target/flink-job-1.0.jar"
