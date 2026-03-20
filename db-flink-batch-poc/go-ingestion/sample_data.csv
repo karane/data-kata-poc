@@ -1,0 +1,6 @@
+sale_id,salesman_id,salesman_name,city,region,product_id,amount,event_time
+FS001,SM001,John Doe,New York,Northeast,P001,1500.50,1704067200000
+FS002,SM002,Jane Smith,Los Angeles,West,P002,2300.75,1704153600000
+FS003,SM001,John Doe,Boston,Northeast,P003,890.00,1704240000000
+FS004,SM003,Bob Wilson,Chicago,Midwest,P001,3200.25,1704326400000
+FS005,SM002,Jane Smith,Seattle,West,P002,1750.00,1704412800000

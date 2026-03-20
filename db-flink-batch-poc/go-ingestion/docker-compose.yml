@@ -6,19 +6,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SERVER_PORT: "8080"
-      WATCH_DIR: "/data/inbox"
-      PROCESSED_DIR: "/data/processed"
-      FAILED_DIR: "/data/failed"
-      POLL_INTERVAL: "5s"
-      LOG_LEVEL: "info"
-      LOG_FORMAT: "console"
+      - PORT=8080
+      - WATCH_DIR=/data/inbox
+      - PROCESSED_DIR=/data/processed
+      - FAILED_DIR=/data/failed
     volumes:
-      - ./data/inbox:/data/inbox
-      - ./data/processed:/data/processed
-      - ./data/failed:/data/failed
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./data:/data

@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
 )
 
-// SaleEventFromFile represents a sale record for file output.
-type SaleEventFromFile struct {
+type SaleEvent struct {
 	SaleID       string  `json:"sale_id"`
 	SalesmanID   string  `json:"salesman_id"`
 	SalesmanName string  `json:"salesman_name"`
@@ -22,133 +22,76 @@ type SaleEventFromFile struct {
 	EventTime    int64   `json:"event_time"`
 }
 
-// Predefined data for realistic generation
-var (
-	regions = []string{"Northeast", "West", "Midwest", "South", "Southwest"}
+var regions = []string{"Northeast", "West", "Midwest", "South", "Southwest"}
 
-	citiesByRegion = map[string][]string{
-		"Northeast": {"New York", "Boston", "Philadelphia", "Pittsburgh", "Hartford"},
-		"West":      {"Los Angeles", "San Francisco", "Seattle", "Portland", "Denver"},
-		"Midwest":   {"Chicago", "Detroit", "Minneapolis", "Cleveland", "Indianapolis"},
-		"South":     {"Houston", "Dallas", "Miami", "Atlanta", "Charlotte"},
-		"Southwest": {"Phoenix", "Las Vegas", "San Diego", "Albuquerque", "Tucson"},
-	}
-
-	productCategories = []string{"P001", "P002", "P003", "P004", "P005"}
-)
-
-// Salesman represents a salesperson with consistent data.
-type Salesman struct {
-	ID   string
-	Name string
+var cities = map[string][]string{
+	"Northeast": {"New York", "Boston", "Philadelphia"},
+	"West":      {"Los Angeles", "San Francisco", "Seattle"},
+	"Midwest":   {"Chicago", "Detroit", "Minneapolis"},
+	"South":     {"Houston", "Miami", "Atlanta"},
+	"Southwest": {"Phoenix", "Las Vegas", "Denver"},
 }
 
-func main() {
-	// Command line flags
-	count := flag.Int("count", 100, "Number of sales records to generate")
-	output := flag.String("output", "", "Output file path (default: stdout)")
-	seed := flag.Int64("seed", 0, "Random seed (0 = random)")
-	salesmenCount := flag.Int("salesmen", 10, "Number of unique salespeople")
-	startDate := flag.String("start-date", "2024-01-01", "Start date for events (YYYY-MM-DD)")
-	endDate := flag.String("end-date", "2024-12-31", "End date for events (YYYY-MM-DD)")
-	minAmount := flag.Float64("min-amount", 100.0, "Minimum sale amount")
-	maxAmount := flag.Float64("max-amount", 10000.0, "Maximum sale amount")
-	pretty := flag.Bool("pretty", false, "Pretty print JSON output")
+var products = []string{"P001", "P002", "P003", "P004", "P005"}
 
+func main() {
+	count := flag.Int("count", 100, "Number of sales to generate")
+	output := flag.String("output", "", "Output file (default: stdout)")
+	pretty := flag.Bool("pretty", false, "Pretty print JSON")
 	flag.Parse()
 
-	// Initialize faker
-	if *seed != 0 {
-		gofakeit.Seed(*seed)
-	} else {
-		gofakeit.Seed(time.Now().UnixNano())
+	gofakeit.Seed(time.Now().UnixNano())
+
+	salespeople := make([]struct{ id, name string }, 10)
+	for i := 0; i < 10; i++ {
+		salespeople[i] = struct{ id, name string }{
+			id:   fmt.Sprintf("SM%03d", i+1),
+			name: gofakeit.Name(),
+		}
 	}
 
-	// Parse dates
-	start, err := time.Parse("2006-01-02", *startDate)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid start date: %v\n", err)
-		os.Exit(1)
-	}
-	end, err := time.Parse("2006-01-02", *endDate)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid end date: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Generate salespeople
-	salesmen := generateSalesmen(*salesmenCount)
-
-	// Generate sales
-	sales := make([]SaleEventFromFile, *count)
+	sales := make([]SaleEvent, *count)
 	for i := 0; i < *count; i++ {
-		sales[i] = generateSale(i+1, salesmen, start, end, *minAmount, *maxAmount)
+		sp := salespeople[rand.Intn(len(salespeople))]
+		region := regions[rand.Intn(len(regions))]
+		cityList := cities[region]
+		city := cityList[rand.Intn(len(cityList))]
+
+		randomDay := rand.Intn(365)
+		eventTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC).
+			Add(time.Duration(randomDay) * 24 * time.Hour).
+			UnixMilli()
+
+		amount := float64(rand.Intn(9900)+100) + float64(rand.Intn(100))/100
+
+		sales[i] = SaleEvent{
+			SaleID:       fmt.Sprintf("FS%06d", i+1),
+			SalesmanID:   sp.id,
+			SalesmanName: sp.name,
+			City:         city,
+			Region:       region,
+			ProductID:    products[rand.Intn(len(products))],
+			Amount:       amount,
+			EventTime:    eventTime,
+		}
 	}
 
-	// Marshal to JSON
 	var jsonData []byte
+	var err error
 	if *pretty {
 		jsonData, err = json.MarshalIndent(sales, "", "  ")
 	} else {
 		jsonData, err = json.Marshal(sales)
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Output
 	if *output != "" {
-		if err := os.WriteFile(*output, jsonData, 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Fprintf(os.Stderr, "Generated %d sales records to %s\n", *count, *output)
+		os.WriteFile(*output, jsonData, 0644)
+		fmt.Printf("Generated %d sales to %s\n", *count, *output)
 	} else {
 		fmt.Println(string(jsonData))
-	}
-}
-
-func generateSalesmen(count int) []Salesman {
-	salesmen := make([]Salesman, count)
-	for i := 0; i < count; i++ {
-		salesmen[i] = Salesman{
-			ID:   fmt.Sprintf("SM%03d", i+1),
-			Name: gofakeit.Name(),
-		}
-	}
-	return salesmen
-}
-
-func generateSale(index int, salesmen []Salesman, start, end time.Time, minAmount, maxAmount float64) SaleEventFromFile {
-	// Pick random salesman
-	salesman := salesmen[gofakeit.Number(0, len(salesmen)-1)]
-
-	// Pick random region and city
-	region := regions[gofakeit.Number(0, len(regions)-1)]
-	cities := citiesByRegion[region]
-	city := cities[gofakeit.Number(0, len(cities)-1)]
-
-	// Generate random timestamp within range
-	duration := end.Sub(start)
-	randomDuration := time.Duration(gofakeit.Int64() % int64(duration))
-	if randomDuration < 0 {
-		randomDuration = -randomDuration
-	}
-	eventTime := start.Add(randomDuration)
-
-	// Generate amount with 2 decimal places
-	amount := gofakeit.Float64Range(minAmount, maxAmount)
-	amount = float64(int(amount*100)) / 100
-
-	return SaleEventFromFile{
-		SaleID:       fmt.Sprintf("FS%06d", index),
-		SalesmanID:   salesman.ID,
-		SalesmanName: salesman.Name,
-		City:         city,
-		Region:       region,
-		ProductID:    productCategories[gofakeit.Number(0, len(productCategories)-1)],
-		Amount:       amount,
-		EventTime:    eventTime.UnixMilli(),
 	}
 }
