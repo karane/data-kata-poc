@@ -13,51 +13,52 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 )
 
-type SaleEvent struct {
-	SaleID       string  `json:"saleId"`
-	SalesmanID   string  `json:"salesmanId"`
-	SalesmanName string  `json:"salesmanName"`
-	City         string  `json:"city"`
-	Region       string  `json:"region"`
-	ProductID    string  `json:"productId"`
-	Amount       float64 `json:"amount"`
-	EventTime    int64   `json:"eventTime"`
-	Source       string  `json:"source"`
+type OrderEvent struct {
+	OrderID    string  `json:"orderId"`
+	SellerID   string  `json:"sellerId"`
+	SellerName string  `json:"sellerName"`
+	Location   string  `json:"location"`
+	ProductID  string  `json:"productId"`
+	Quantity   int     `json:"quantity"`
+	TotalPrice float64 `json:"totalPrice"`
+	OrderDate  string  `json:"orderDate"`
+	Channel    string  `json:"channel"`
+	Source     string  `json:"source"`
 }
 
-type salesman struct {
+type seller struct {
 	id   string
 	name string
 }
 
-var cityRegions = [][2]string{
-	{"New York", "Northeast"}, {"Boston", "Northeast"}, {"Philadelphia", "Northeast"},
-	{"Washington DC", "Northeast"}, {"Los Angeles", "West"}, {"San Francisco", "West"},
-	{"Seattle", "West"}, {"San Diego", "West"}, {"Chicago", "Midwest"},
-	{"Detroit", "Midwest"}, {"Minneapolis", "Midwest"}, {"Houston", "South"},
-	{"Atlanta", "South"}, {"Dallas", "South"}, {"Miami", "South"},
-	{"San Antonio", "South"}, {"Phoenix", "Southwest"}, {"Denver", "Southwest"},
-	{"Las Vegas", "Southwest"},
+var locations = []string{
+	"New York", "Boston", "Philadelphia", "Washington DC",
+	"Los Angeles", "San Francisco", "Seattle", "San Diego",
+	"Chicago", "Detroit", "Minneapolis",
+	"Houston", "Atlanta", "Dallas", "Miami", "San Antonio",
+	"Phoenix", "Denver", "Las Vegas",
 }
 
+var channels = []string{"online", "in-store", "phone"}
+
 var (
-	mu       sync.Mutex
-	events   []SaleEvent
-	seq      int
-	salesmen []salesman
+	mu      sync.Mutex
+	events  []OrderEvent
+	seq     int
+	sellers []seller
 	products []string
 )
 
 func buildPools(n int) {
-	salesmen = make([]salesman, n)
-	for i := range salesmen {
-		salesmen[i] = salesman{
-			id:   fmt.Sprintf("SM%03d", i+1),
+	sellers = make([]seller, n)
+	for i := range sellers {
+		sellers[i] = seller{
+			id:   fmt.Sprintf("SL%03d", i+1),
 			name: gofakeit.Name(),
 		}
 	}
-	log.Printf("[sales-api] salesman pool (%d):", n)
-	for _, s := range salesmen {
+	log.Printf("[sales-api] seller pool (%d):", n)
+	for _, s := range sellers {
 		log.Printf("  %s  %s", s.id, s.name)
 	}
 
@@ -67,26 +68,28 @@ func buildPools(n int) {
 	}
 }
 
-func generateEvent() SaleEvent {
+func generateEvent() OrderEvent {
 	mu.Lock()
 	seq++
 	id := seq
 	mu.Unlock()
 
-	cr := cityRegions[gofakeit.Number(0, len(cityRegions)-1)]
-	sm := salesmen[gofakeit.Number(0, len(salesmen)-1)]
+	loc := locations[gofakeit.Number(0, len(locations)-1)]
+	sl := sellers[gofakeit.Number(0, len(sellers)-1)]
 	product := products[gofakeit.Number(0, len(products)-1)]
+	channel := channels[gofakeit.Number(0, len(channels)-1)]
 
-	return SaleEvent{
-		SaleID:       fmt.Sprintf("API%07d", id),
-		SalesmanID:   sm.id,
-		SalesmanName: sm.name,
-		City:         cr[0],
-		Region:       cr[1],
-		ProductID:    product,
-		Amount:       gofakeit.Price(100, 5000),
-		EventTime:    time.Now().UnixMilli(),
-		Source:       "api",
+	return OrderEvent{
+		OrderID:    fmt.Sprintf("API%07d", id),
+		SellerID:   sl.id,
+		SellerName: sl.name,
+		Location:   loc,
+		ProductID:  product,
+		Quantity:   gofakeit.Number(1, 20),
+		TotalPrice: gofakeit.Price(100, 5000),
+		OrderDate:  time.Now().UTC().Format(time.RFC3339),
+		Channel:    channel,
+		Source:     "api",
 	}
 }
 
@@ -106,7 +109,7 @@ func seedLoop(intervalMs int) {
 
 func handleEvents(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
-	snapshot := make([]SaleEvent, len(events))
+	snapshot := make([]OrderEvent, len(events))
 	copy(snapshot, events)
 	events = events[:0] // drain after each poll
 	mu.Unlock()
@@ -125,7 +128,7 @@ func handleHealth(w http.ResponseWriter, _ *http.Request) {
 func main() {
 	port := envOrDefault("PORT", "8080")
 	intervalMs := envOrDefaultInt("SEED_INTERVAL_MS", 4000)
-	salesmenCount := envOrDefaultInt("SALESMEN_COUNT", 8)
+	sellersCount := envOrDefaultInt("SELLERS_COUNT", 8)
 	fakerSeed := envOrDefaultInt64("FAKER_SEED", 0)
 
 	if fakerSeed != 0 {
@@ -133,7 +136,7 @@ func main() {
 		log.Printf("[sales-api] faker seed=%d (reproducible)", fakerSeed)
 	}
 
-	buildPools(salesmenCount)
+	buildPools(sellersCount)
 	log.Printf("[sales-api] starting  port=%s  seedInterval=%dms", port, intervalMs)
 
 	go seedLoop(intervalMs)
