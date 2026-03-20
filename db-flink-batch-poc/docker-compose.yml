@@ -144,8 +144,7 @@ services:
         s3.secret-key: rustfssecret
         s3.endpoint: http://rustfs:9000
         s3.path.style.access: true
-        metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
-        metrics.reporter.prom.port: 9249
+        metrics.reporter.prom.factory.
 
   # -- Monitoring
   prometheus:
@@ -169,9 +168,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - grafana-data:/var/lib/grafana
-    depends_on:
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashbo
       - prometheus
       
   # -- Apache Atlas — data governance and lineage
@@ -191,21 +188,17 @@ services:
   # -- Job Submitter
   # Builds the fat JAR, submits to the cluster, and blocks until the job finishes.
   # Waits for sales-csv-generator to finish so RustFS files are present before the job runs.
-  flink-job-submit:
-    build: ./flink-job
-    depends_on:
-      flink-jobmanager:
-        condition: service_healthy
+  fli
       flink-taskmanager:
         condition: service_started
       postgres-source:
         condition: service_healthy
       postgres-sink:
-        condition: service_healthy
+       
       sales-csv-generator:
         condition: service_completed_successfully
       sales-api:
-        condition: service_healthy
+        condition: se
       atlas:
         condition: service_healthy
     environment:
