@@ -198,11 +198,11 @@ services:
       postgres-source:
         condition: service_healthy
       postgres-sink:
-       
+        condition: service_healthy
       sales-csv-generator:
         condition: service_completed_successfully
       sales-api:
-        condition: se
+        condition: service_healthy
       atlas:
         condition: service_healthy
     environment:
