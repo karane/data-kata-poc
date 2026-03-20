@@ -188,7 +188,11 @@ services:
   # -- Job Submitter
   # Builds the fat JAR, submits to the cluster, and blocks until the job finishes.
   # Waits for sales-csv-generator to finish so RustFS files are present before the job runs.
-  fli
+  flink-job-submit:
+    build: ./flink-job
+    depends_on:
+      flink-jobmanager:
+        condition: service_healthy
       flink-taskmanager:
         condition: service_started
       postgres-source:

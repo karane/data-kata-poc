@@ -19,7 +19,6 @@ All events are unioned, then aggregated into city and salesman rankings written 
 | PostgreSQL sink | localhost:5435 |
 | RustFS console | [localhost:7481](http://localhost:7481) |
 | sales-api | [localhost:8085](http://localhost:8085) |
-| Apache Atlas | [localhost:21000](http://localhost:21000) |
 | Prometheus | [localhost:9090](http://localhost:9090) |
 | Grafana | [localhost:3000](http://localhost:3000) (admin / admin) |
 | Apache Atlas | [localhost:21000](http://localhost:21000) |
