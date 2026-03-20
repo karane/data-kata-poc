@@ -61,7 +61,7 @@ docker run --rm \
   -e ATLAS_URL=http://atlas:21000 \
   -e ATLAS_USER=admin \
   -e ATLAS_PASS=admin \
-  flink:1.18-java11 \
+  flink:2.0-java17 \
   java -cp /job.jar com.poc.LineageReporter \
     --from "$FROM" --to "$TO" --run-id "$RUN_ID" --metrics-file /metrics/job-metrics.json
 

@@ -10,9 +10,9 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.accumulators.LongCounter;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
@@ -362,7 +362,7 @@ public class BatchJob {
         public CountingMap(String accName) { this.accName = accName; }
 
         @Override
-        public void open(Configuration params) {
+        public void open(OpenContext openContext) {
             counter = new LongCounter();
             getRuntimeContext().addAccumulator(accName, counter);
         }
