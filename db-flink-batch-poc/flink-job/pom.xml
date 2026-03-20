@@ -11,10 +11,11 @@
   <packaging>jar</packaging>
 
   <properties>
-    <flink.version>2.0.0</flink.version>
+    <flink.version>2.2.0</flink.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
   </properties>
 
   <dependencies>
@@ -53,11 +54,11 @@
       <version>42.7.3</version>
     </dependency>
 
-    <!-- Jackson (bundled — Flink 2.0 does not expose it to user code) -->
+    <!-- Jackson (bundled — Flink 2.2 does not expose it to user code) -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.15.2</version>
+      <version>2.16.1</version>
     </dependency>
 
     <!-- SLF4J (provided by Flink runtime — needed at compile time) -->
@@ -71,6 +72,16 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <source>17</source>
+          <target>17</target>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
