@@ -2,4 +2,3 @@
 builder = "DOCKERFILE"
 
 [deploy]
-  startCommand = "sh /opt/flink/bin/start.sh"

@@ -14,5 +14,7 @@ FROM flink:2.0-java17
 COPY start.sh /opt/flink/bin/
 RUN chmod +x /opt/flink/bin/start.sh
 
+ENTRYPOINT ["/opt/flink/bin/start.sh"]
+
 # The Flink cluster will load the JAR from usrlib when submitted
 COPY --from=builder /app/target/flink-job-*.jar /opt/flink/usrlib/flink-job.jar
