@@ -144,7 +144,8 @@ services:
         s3.secret-key: rustfssecret
         s3.endpoint: http://rustfs:9000
         s3.path.style.access: true
-        metrics.reporter.prom.factory.
+        metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+        metrics.reporter.prom.port: 9249
 
   # -- Monitoring
   prometheus:
@@ -168,7 +169,9 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashbo
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
       - prometheus
       
   # -- Apache Atlas — data governance and lineage
