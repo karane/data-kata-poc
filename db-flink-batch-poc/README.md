@@ -12,16 +12,15 @@ All events are unioned, then aggregated into city and salesman rankings written 
 
 ## Services & ports
 
-| Service           | Port                                                    | Description |
-|-------------------|---------------------------------------------------------|-------------|
-| Flink UI          | [localhost:8084](http://localhost:8084)                 | Web interface for monitoring Flink jobs and cluster status |
-| PostgreSQL source | localhost:5434                                          | Database containing source sales data |
-| PostgreSQL sink   | localhost:5435                                          | Database storing aggregated sales rankings |
-| RustFS console    | [localhost:7481](http://localhost:7481)                 | Web console for the S3-compatible object storage |
-| sales-api         | [localhost:8085](http://localhost:8085)                 | Go REST service providing random sales events for the batch job |
-| aggregate-api     | [localhost:8086](http://localhost:8086)                 | Go REST API serving sales rankings (top cities and salesmen) from the PostgreSQL sink database |
-| Prometheus        | [localhost:9090](http://localhost:9090)                 | Metrics collection and querying service |
-| Grafana           | [localhost:3000](http://localhost:3000) (admin / admin) | Dashboard for visualizing metrics and sales data |
+| Service | Port |
+|---|---|
+| Flink UI | [localhost:8084](http://localhost:8084) |
+| PostgreSQL source | localhost:5434 |
+| PostgreSQL sink | localhost:5435 |
+| RustFS console | [localhost:7481](http://localhost:7481) |
+| sales-api | [localhost:8085](http://localhost:8085) |
+| Prometheus | [localhost:9090](http://localhost:9090) |
+| Grafana | [localhost:3000](http://localhost:3000) (admin / admin) |
 
 ## Start
 
@@ -49,7 +48,7 @@ Use these scripts when the cluster is already up and you want to submit jobs man
 **1. Start the cluster (skip the job-submit service):**
 
 ```bash
-docker compose up rustfs postgres-source postgres-sink sales-api sales-csv-generator flink-jobmanager flink-taskmanager -d
+docker compose up rustfs postgres-source postgres-sink sales-api sales-csv-generator flink-jobmanager flink-taskmanager atlas -d
 ```
 
 **2. Build the fat JAR:**
@@ -172,22 +171,6 @@ Query source data:
 ```bash
 docker exec db-flink-batch-poc-postgres-source-1 psql -U poc -d salesdb \
   -c "SELECT COUNT(*) FROM source_sales;"
-```
-
-## Query results via API
-
-The aggregate-api provides REST endpoints to query the rankings programmatically:
-
-- `GET /health`: Health check endpoint
-- `GET /top-sales-by-city`: Returns top cities by total sales
-- `GET /top-salesman`: Returns top salesmen by total sales
-
-Example queries:
-
-```bash
-curl http://localhost:8086/health
-curl http://localhost:8086/top-sales-by-city
-curl http://localhost:8086/top-salesman
 ```
 
 ## Stop
