@@ -21,7 +21,6 @@ All events are unioned, then aggregated into city and salesman rankings written 
 | sales-api | [localhost:8085](http://localhost:8085) |
 | Prometheus | [localhost:9090](http://localhost:9090) |
 | Grafana | [localhost:3000](http://localhost:3000) (admin / admin) |
-| Apache Atlas | [localhost:21000](http://localhost:21000) |
 
 ## Start
 
@@ -173,47 +172,6 @@ Query source data:
 docker exec db-flink-batch-poc-postgres-source-1 psql -U poc -d salesdb \
   -c "SELECT COUNT(*) FROM source_sales;"
 ```
-
-## Data Lineage — Apache Atlas
-
-Open **[http://localhost:21000](http://localhost:21000)** (admin / admin) after the job runs.
-
-Atlas tracks every batch run as a **Process** entity linking the three input sources to the `sales_ranks` output, and a pair of static **VIEW** processes linking `sales_ranks` to the two PostgreSQL views.
-
-### Entities registered
-
-| Entity | Atlas type | Role |
-|---|---|---|
-| `source_sales` | `poc_db_table` | Input — PostgreSQL |
-| `sales-csv` | `poc_s3_bucket` | Input — RustFS S3 bucket |
-| `sales-api /api/sales/events` | `http_endpoint` | Input — HTTP REST |
-| `sales_ranks` | `poc_db_table` | Output — sink table |
-| `top_cities_latest` | `poc_db_table` | Output — PostgreSQL view |
-| `top_salesmen_latest` | `poc_db_table` | Output — PostgreSQL view |
-| `Flink BatchJob: sales-ranking <from> -> <to>` | `Process` | One entity per run |
-| `PostgreSQL VIEW: top_cities_latest` | `Process` | View derivation (static) |
-| `PostgreSQL VIEW: top_salesmen_latest` | `Process` | View derivation (static) |
-
-### Lineage graph
-
-Each run adds a new Process node to Atlas. The full lineage visible from `sales_ranks`:
-
-```
-source_sales (PostgreSQL) ──┐
-sales-csv    (RustFS S3)  ──┼──► Flink BatchJob ──► sales_ranks ──► VIEW ──► top_cities_latest
-sales-api    (HTTP)       ──┘                                   └──► VIEW ──► top_salesmen_latest
-```
-
-![sales_ranks lineage graph in Atlas UI](../sales_ranks_lineage.png)
-
-Navigate to **Search → sales_ranks → Lineage tab** to see this graph in the Atlas UI.
-Every historical run is listed in **Search → type: Process → name contains "Flink BatchJob"**, with the date range encoded in its `qualifiedName`.
-
-![Flink BatchJob process entities in Atlas UI](../atlas_process.png)
-
-### Note on startup
-
-Atlas (embedded HBase + Solr) takes ~2 minutes to fully initialize. `flink-job-submit` waits for the Atlas health check to pass before running. If you bring the stack up with `docker compose up`, allow Atlas to become healthy before the job starts.
 
 ## Stop
 
