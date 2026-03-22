@@ -1,0 +1,22 @@
+[
+  {
+    "sale_id": "FS006",
+    "salesman_id": "SM001",
+    "salesman_name": "John Doe",
+    "city": "Miami",
+    "region": "South",
+    "product_id": "P001",
+    "amount": 2100.00,
+    "event_time": 1704499200000
+  },
+  {
+    "sale_id": "FS007",
+    "salesman_id": "SM003",
+    "salesman_name": "Bob Wilson",
+    "city": "Phoenix",
+    "region": "Southwest",
+    "product_id": "P003",
+    "amount": 4500.50,
+    "event_time": 1704585600000
+  }
+]

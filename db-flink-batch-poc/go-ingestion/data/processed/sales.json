@@ -1,0 +1,502 @@
+[
+  {
+    "sale_id": "FS000001",
+    "salesman_id": "SM007",
+    "salesman_name": "Mckenzie Runte",
+    "city": "Chicago",
+    "region": "Midwest",
+    "product_id": "P004",
+    "amount": 2741.4,
+    "event_time": 1716163200000
+  },
+  {
+    "sale_id": "FS000002",
+    "salesman_id": "SM009",
+    "salesman_name": "Nicholaus Huels",
+    "city": "Boston",
+    "region": "Northeast",
+    "product_id": "P005",
+    "amount": 3684.27,
+    "event_time": 1711065600000
+  },
+  {
+    "sale_id": "FS000003",
+    "salesman_id": "SM006",
+    "salesman_name": "Rodger King",
+    "city": "Los Angeles",
+    "region": "West",
+    "product_id": "P002",
+    "amount": 8959.99,
+    "event_time": 1710892800000
+  },
+  {
+    "sale_id": "FS000004",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Atlanta",
+    "region": "South",
+    "product_id": "P001",
+    "amount": 2016.11,
+    "event_time": 1729555200000
+  },
+  {
+    "sale_id": "FS000005",
+    "salesman_id": "SM009",
+    "salesman_name": "Nicholaus Huels",
+    "city": "Houston",
+    "region": "South",
+    "product_id": "P003",
+    "amount": 2094.84,
+    "event_time": 1715126400000
+  },
+  {
+    "sale_id": "FS000006",
+    "salesman_id": "SM008",
+    "salesman_name": "Ezekiel Prosacco",
+    "city": "New York",
+    "region": "Northeast",
+    "product_id": "P005",
+    "amount": 4929.45,
+    "event_time": 1728950400000
+  },
+  {
+    "sale_id": "FS000007",
+    "salesman_id": "SM009",
+    "salesman_name": "Nicholaus Huels",
+    "city": "Denver",
+    "region": "Southwest",
+    "product_id": "P002",
+    "amount": 1555.08,
+    "event_time": 1725062400000
+  },
+  {
+    "sale_id": "FS000008",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Miami",
+    "region": "South",
+    "product_id": "P005",
+    "amount": 9368.72,
+    "event_time": 1724976000000
+  },
+  {
+    "sale_id": "FS000009",
+    "salesman_id": "SM004",
+    "salesman_name": "Joelle Howe",
+    "city": "Seattle",
+    "region": "West",
+    "product_id": "P004",
+    "amount": 2023.13,
+    "event_time": 1707091200000
+  },
+  {
+    "sale_id": "FS000010",
+    "salesman_id": "SM001",
+    "salesman_name": "Lilian Rutherford",
+    "city": "Chicago",
+    "region": "Midwest",
+    "product_id": "P003",
+    "amount": 1877.7,
+    "event_time": 1705622400000
+  },
+  {
+    "sale_id": "FS000011",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Detroit",
+    "region": "Midwest",
+    "product_id": "P003",
+    "amount": 8435.97,
+    "event_time": 1731196800000
+  },
+  {
+    "sale_id": "FS000012",
+    "salesman_id": "SM003",
+    "salesman_name": "Rachael Leuschke",
+    "city": "Las Vegas",
+    "region": "Southwest",
+    "product_id": "P002",
+    "amount": 6733.57,
+    "event_time": 1730678400000
+  },
+  {
+    "sale_id": "FS000013",
+    "salesman_id": "SM001",
+    "salesman_name": "Lilian Rutherford",
+    "city": "Seattle",
+    "region": "West",
+    "product_id": "P004",
+    "amount": 1440.41,
+    "event_time": 1714521600000
+  },
+  {
+    "sale_id": "FS000014",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Chicago",
+    "region": "Midwest",
+    "product_id": "P002",
+    "amount": 7003.62,
+    "event_time": 1712448000000
+  },
+  {
+    "sale_id": "FS000015",
+    "salesman_id": "SM003",
+    "salesman_name": "Rachael Leuschke",
+    "city": "San Francisco",
+    "region": "West",
+    "product_id": "P004",
+    "amount": 6767.58,
+    "event_time": 1705104000000
+  },
+  {
+    "sale_id": "FS000016",
+    "salesman_id": "SM006",
+    "salesman_name": "Rodger King",
+    "city": "Minneapolis",
+    "region": "Midwest",
+    "product_id": "P003",
+    "amount": 6521.42,
+    "event_time": 1709337600000
+  },
+  {
+    "sale_id": "FS000017",
+    "salesman_id": "SM004",
+    "salesman_name": "Joelle Howe",
+    "city": "Seattle",
+    "region": "West",
+    "product_id": "P001",
+    "amount": 1168.04,
+    "event_time": 1724284800000
+  },
+  {
+    "sale_id": "FS000018",
+    "salesman_id": "SM008",
+    "salesman_name": "Ezekiel Prosacco",
+    "city": "New York",
+    "region": "Northeast",
+    "product_id": "P004",
+    "amount": 874.65,
+    "event_time": 1710374400000
+  },
+  {
+    "sale_id": "FS000019",
+    "salesman_id": "SM003",
+    "salesman_name": "Rachael Leuschke",
+    "city": "Atlanta",
+    "region": "South",
+    "product_id": "P005",
+    "amount": 3062.29,
+    "event_time": 1735516800000
+  },
+  {
+    "sale_id": "FS000020",
+    "salesman_id": "SM002",
+    "salesman_name": "Kamren Turner",
+    "city": "Minneapolis",
+    "region": "Midwest",
+    "product_id": "P001",
+    "amount": 3725.61,
+    "event_time": 1715644800000
+  },
+  {
+    "sale_id": "FS000021",
+    "salesman_id": "SM007",
+    "salesman_name": "Mckenzie Runte",
+    "city": "Boston",
+    "region": "Northeast",
+    "product_id": "P005",
+    "amount": 2789.87,
+    "event_time": 1731456000000
+  },
+  {
+    "sale_id": "FS000022",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Chicago",
+    "region": "Midwest",
+    "product_id": "P004",
+    "amount": 9474.77,
+    "event_time": 1723161600000
+  },
+  {
+    "sale_id": "FS000023",
+    "salesman_id": "SM008",
+    "salesman_name": "Ezekiel Prosacco",
+    "city": "Phoenix",
+    "region": "Southwest",
+    "product_id": "P004",
+    "amount": 1042.76,
+    "event_time": 1724457600000
+  },
+  {
+    "sale_id": "FS000024",
+    "salesman_id": "SM009",
+    "salesman_name": "Nicholaus Huels",
+    "city": "Phoenix",
+    "region": "Southwest",
+    "product_id": "P004",
+    "amount": 2942.88,
+    "event_time": 1722902400000
+  },
+  {
+    "sale_id": "FS000025",
+    "salesman_id": "SM009",
+    "salesman_name": "Nicholaus Huels",
+    "city": "Seattle",
+    "region": "West",
+    "product_id": "P003",
+    "amount": 1622.39,
+    "event_time": 1720051200000
+  },
+  {
+    "sale_id": "FS000026",
+    "salesman_id": "SM010",
+    "salesman_name": "Ryder Smith",
+    "city": "Las Vegas",
+    "region": "Southwest",
+    "product_id": "P003",
+    "amount": 7740.45,
+    "event_time": 1709337600000
+  },
+  {
+    "sale_id": "FS000027",
+    "salesman_id": "SM006",
+    "salesman_name": "Rodger King",
+    "city": "Atlanta",
+    "region": "South",
+    "product_id": "P004",
+    "amount": 378.74,
+    "event_time": 1734307200000
+  },
+  {
+    "sale_id": "FS000028",
+    "salesman_id": "SM001",
+    "salesman_name": "Lilian Rutherford",
+    "city": "Philadelphia",
+    "region": "Northeast",
+    "product_id": "P003",
+    "amount": 8499.64,
+    "event_time": 1735516800000
+  },
+  {
+    "sale_id": "FS000029",
+    "salesman_id": "SM010",
+    "salesman_name": "Ryder Smith",
+    "city": "Denver",
+    "region": "Southwest",
+    "product_id": "P001",
+    "amount": 2596.54,
+    "event_time": 1720051200000
+  },
+  {
+    "sale_id": "FS000030",
+    "salesman_id": "SM006",
+    "salesman_name": "Rodger King",
+    "city": "Houston",
+    "region": "South",
+    "product_id": "P003",
+    "amount": 3444.79,
+    "event_time": 1707436800000
+  },
+  {
+    "sale_id": "FS000031",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Boston",
+    "region": "Northeast",
+    "product_id": "P003",
+    "amount": 9508.54,
+    "event_time": 1730419200000
+  },
+  {
+    "sale_id": "FS000032",
+    "salesman_id": "SM002",
+    "salesman_name": "Kamren Turner",
+    "city": "New York",
+    "region": "Northeast",
+    "product_id": "P004",
+    "amount": 3999.65,
+    "event_time": 1718409600000
+  },
+  {
+    "sale_id": "FS000033",
+    "salesman_id": "SM002",
+    "salesman_name": "Kamren Turner",
+    "city": "Seattle",
+    "region": "West",
+    "product_id": "P005",
+    "amount": 6604.37,
+    "event_time": 1731283200000
+  },
+  {
+    "sale_id": "FS000034",
+    "salesman_id": "SM006",
+    "salesman_name": "Rodger King",
+    "city": "Chicago",
+    "region": "Midwest",
+    "product_id": "P003",
+    "amount": 3407.77,
+    "event_time": 1714608000000
+  },
+  {
+    "sale_id": "FS000035",
+    "salesman_id": "SM003",
+    "salesman_name": "Rachael Leuschke",
+    "city": "Atlanta",
+    "region": "South",
+    "product_id": "P001",
+    "amount": 4170.18,
+    "event_time": 1721347200000
+  },
+  {
+    "sale_id": "FS000036",
+    "salesman_id": "SM007",
+    "salesman_name": "Mckenzie Runte",
+    "city": "Miami",
+    "region": "South",
+    "product_id": "P002",
+    "amount": 2927.06,
+    "event_time": 1720137600000
+  },
+  {
+    "sale_id": "FS000037",
+    "salesman_id": "SM007",
+    "salesman_name": "Mckenzie Runte",
+    "city": "Miami",
+    "region": "South",
+    "product_id": "P002",
+    "amount": 3194.33,
+    "event_time": 1735171200000
+  },
+  {
+    "sale_id": "FS000038",
+    "salesman_id": "SM009",
+    "salesman_name": "Nicholaus Huels",
+    "city": "Denver",
+    "region": "Southwest",
+    "product_id": "P002",
+    "amount": 192.24,
+    "event_time": 1729036800000
+  },
+  {
+    "sale_id": "FS000039",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Boston",
+    "region": "Northeast",
+    "product_id": "P002",
+    "amount": 2542.42,
+    "event_time": 1721606400000
+  },
+  {
+    "sale_id": "FS000040",
+    "salesman_id": "SM007",
+    "salesman_name": "Mckenzie Runte",
+    "city": "Las Vegas",
+    "region": "Southwest",
+    "product_id": "P005",
+    "amount": 7706.26,
+    "event_time": 1716681600000
+  },
+  {
+    "sale_id": "FS000041",
+    "salesman_id": "SM004",
+    "salesman_name": "Joelle Howe",
+    "city": "Detroit",
+    "region": "Midwest",
+    "product_id": "P005",
+    "amount": 5255.66,
+    "event_time": 1711584000000
+  },
+  {
+    "sale_id": "FS000042",
+    "salesman_id": "SM004",
+    "salesman_name": "Joelle Howe",
+    "city": "Atlanta",
+    "region": "South",
+    "product_id": "P004",
+    "amount": 2899.43,
+    "event_time": 1705363200000
+  },
+  {
+    "sale_id": "FS000043",
+    "salesman_id": "SM002",
+    "salesman_name": "Kamren Turner",
+    "city": "Boston",
+    "region": "Northeast",
+    "product_id": "P001",
+    "amount": 8750.2,
+    "event_time": 1727481600000
+  },
+  {
+    "sale_id": "FS000044",
+    "salesman_id": "SM006",
+    "salesman_name": "Rodger King",
+    "city": "Minneapolis",
+    "region": "Midwest",
+    "product_id": "P002",
+    "amount": 1022.91,
+    "event_time": 1722816000000
+  },
+  {
+    "sale_id": "FS000045",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Seattle",
+    "region": "West",
+    "product_id": "P002",
+    "amount": 2723.24,
+    "event_time": 1734480000000
+  },
+  {
+    "sale_id": "FS000046",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Phoenix",
+    "region": "Southwest",
+    "product_id": "P002",
+    "amount": 8634.63,
+    "event_time": 1715990400000
+  },
+  {
+    "sale_id": "FS000047",
+    "salesman_id": "SM005",
+    "salesman_name": "Russell Carroll",
+    "city": "Las Vegas",
+    "region": "Southwest",
+    "product_id": "P004",
+    "amount": 2352.18,
+    "event_time": 1729123200000
+  },
+  {
+    "sale_id": "FS000048",
+    "salesman_id": "SM002",
+    "salesman_name": "Kamren Turner",
+    "city": "Miami",
+    "region": "South",
+    "product_id": "P001",
+    "amount": 9127.39,
+    "event_time": 1706745600000
+  },
+  {
+    "sale_id": "FS000049",
+    "salesman_id": "SM006",
+    "salesman_name": "Rodger King",
+    "city": "Chicago",
+    "region": "Midwest",
+    "product_id": "P004",
+    "amount": 3767.53,
+    "event_time": 1724371200000
+  },
+  {
+    "sale_id": "FS000050",
+    "salesman_id": "SM008",
+    "salesman_name": "Ezekiel Prosacco",
+    "city": "Los Angeles",
+    "region": "West",
+    "product_id": "P005",
+    "amount": 4570.99,
+    "event_time": 1719446400000
+  }
+]

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  go-ingestion:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - WATCH_DIR=/data/inbox
+      - PROCESSED_DIR=/data/processed
+      - FAILED_DIR=/data/failed
+    volumes:
+      - ./data:/data
