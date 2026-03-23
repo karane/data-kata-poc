@@ -12,16 +12,16 @@ All events are unioned, then aggregated into city and salesman rankings written 
 
 ## Services & ports
 
-| Service | Port |
-|---|---|
-| Flink UI | [localhost:8084](http://localhost:8084) |
-| PostgreSQL source | localhost:5434 |
-| PostgreSQL sink | localhost:5435 |
-| RustFS console | [localhost:7481](http://localhost:7481) |
-| sales-api | [localhost:8085](http://localhost:8085) |
-| Prometheus | [localhost:9090](http://localhost:9090) |
-| Grafana | [localhost:3000](http://localhost:3000) (admin / admin) |
-| Apache Atlas | [localhost:21000](http://localhost:21000) |
+| Service            | Port                                                    |
+|--------------------|---------------------------------------------------------|
+| Flink UI           | [localhost:8084](http://localhost:8084)                 |
+| PostgreSQL source  | localhost:5434                                          |
+| PostgreSQL sink    | localhost:5435                                          |
+| RustFS console     | [localhost:7481](http://localhost:7481)                 |
+| sales-api          | [localhost:8085](http://localhost:8085)                 |
+| Prometheus         | [localhost:9090](http://localhost:9090)                 |
+| Grafana            | [localhost:3000](http://localhost:3000) (admin / admin) |
+| aggregate-api      | [localhost:8086](http://localhost:8086)                 |
 
 ## Start
 
@@ -214,6 +214,22 @@ Every historical run is listed in **Search → type: Process → name contains "
 ### Note on startup
 
 Atlas (embedded HBase + Solr) takes ~2 minutes to fully initialize. `flink-job-submit` waits for the Atlas health check to pass before running. If you bring the stack up with `docker compose up`, allow Atlas to become healthy before the job starts.
+
+## Query results via API - Aggregate API
+
+The aggregate-api provides REST endpoints to query the rankings programmatically:
+
+- `GET /health`: Health check endpoint
+- `GET /top-sales-by-city`: Returns top cities by total sales
+- `GET /top-salesman`: Returns top salesmen by total sales
+
+Example queries:
+
+```bash
+curl http://localhost:8086/health
+curl http://localhost:8086/top-sales-by-city
+curl http://localhost:8086/top-salesman
+```
 
 ## Stop
 
