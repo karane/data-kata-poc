@@ -33,9 +33,7 @@ func (p *PostgresStore) TopSalesByCity() ([]CitySales, error) {
 	rows, err := p.DB.Query(`
 		SELECT city, total_sales, rank, window_end
 		FROM top_cities_latest
-		WHERE window_end = (SELECT MAX(window_end) FROM top_cities_latest)
-		ORDER BY rank ASC
-		LIMIT 10;
+		WHERE window_end = (SELECT MAX(window_end) FROM top_cities_latest);
 	`)
 	if err != nil {
 		return nil, err
@@ -56,14 +54,12 @@ func (p *PostgresStore) TopSalesByCity() ([]CitySales, error) {
 	return result, nil
 }
 
-// Top salesman (rank = 1 from latest window)
+// Top salesman from latest window
 func (p *PostgresStore) TopSalesman() (Salesman, error) {
 	row := p.DB.QueryRow(`
 		SELECT salesman_name, salesman_id, total_sales, rank, window_end
 		FROM top_salesmen_latest
-		WHERE window_end = (SELECT MAX(window_end) FROM top_salesmen_latest)
-		ORDER BY rank ASC
-		LIMIT 10;
+		WHERE window_end = (SELECT MAX(window_end) FROM top_salesmen_latest);
 	`)
 
 	var s Salesman

@@ -13,7 +13,7 @@ import (
 
 func main() {
 	port := envOrDefault("PORT", "8080")
-	// DB config (matches docker-compose)
+
 	hostDB := envOrDefault("DB_HOST", "postgres-sink")
 	portDB := envOrDefault("DB_PORT", "5432")
 	userDB := envOrDefault("DB_USER", "poc")
