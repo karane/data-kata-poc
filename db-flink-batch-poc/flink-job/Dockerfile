@@ -9,7 +9,7 @@ COPY src ./src
 RUN mvn package -DskipTests -q
 
 # Runtime / submitter stage
-FROM flink:2.0-java17
+FROM flink:2.2.0-java17
 
 COPY start.sh /opt/flink/bin/
 RUN chmod +x /opt/flink/bin/start.sh
