@@ -1,0 +1,7 @@
+[deploy]
+  image = "redis:7-alpine"
+  healthcheckPath = "/usr/bin/redis-cli ping"
+  healthcheckTimeout = 5
+  healthcheckInterval = 5
+  healthcheckRetries = 10
+  healthcheckStartPeriod = 5

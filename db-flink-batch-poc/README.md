@@ -4,7 +4,7 @@ Batch sales-rankings pipeline with **three sources**:
 
 | Source | Description |
 |---|---|
-| RustFS (S3-compatible) | Daily `sales_YYYYMMDD.csv` files, one per day in `[--from, --to]` |
+| JuiceFS (S3-compatible) | Daily `sales_YYYYMMDD.csv` files, one per day in `[--from, --to]` |
 | PostgreSQL | `source_sales` table, date-filtered JDBC query |
 | HTTP / sales-api | Go REST service — polled once at job start via `GET /api/sales/events` |
 
@@ -12,6 +12,7 @@ All events are unioned, then aggregated into city and salesman rankings written 
 
 ## Services & ports
 
+<<<<<<< Updated upstream
 | Service            | Port                                                    |
 |--------------------|---------------------------------------------------------|
 | Flink UI           | [localhost:8084](http://localhost:8084)                 |
@@ -22,6 +23,18 @@ All events are unioned, then aggregated into city and salesman rankings written 
 | Prometheus         | [localhost:9090](http://localhost:9090)                 |
 | Grafana            | [localhost:3000](http://localhost:3000) (admin / admin) |
 | aggregate-api      | [localhost:8086](http://localhost:8086)                 |
+=======
+| Service | Port |
+|---|---|
+| Flink UI | [localhost:8084](http://localhost:8084) |
+| PostgreSQL source | localhost:5434 |
+| PostgreSQL sink | localhost:5435 |
+| JuiceFS S3 API | [localhost:7480](http://localhost:7480) |
+| sales-api | [localhost:8085](http://localhost:8085) |
+| Prometheus | [localhost:9090](http://localhost:9090) |
+| Grafana | [localhost:3000](http://localhost:3000) (admin / admin) |
+| Apache Atlas | [localhost:21000](http://localhost:21000) |
+>>>>>>> Stashed changes
 
 ## Start
 
@@ -49,7 +62,7 @@ Use these scripts when the cluster is already up and you want to submit jobs man
 **1. Start the cluster (skip the job-submit service):**
 
 ```bash
-docker compose up rustfs postgres-source postgres-sink sales-api sales-csv-generator flink-jobmanager flink-taskmanager atlas -d
+docker compose up redis juicefs-s3 postgres-source postgres-sink sales-api sales-csv-generator flink-jobmanager flink-taskmanager atlas -d
 ```
 
 **2. Build the fat JAR:**
@@ -185,7 +198,7 @@ Atlas tracks every batch run as a **Process** entity linking the three input sou
 | Entity | Atlas type | Role |
 |---|---|---|
 | `source_sales` | `poc_db_table` | Input — PostgreSQL |
-| `sales-csv` | `poc_s3_bucket` | Input — RustFS S3 bucket |
+| `sales-csv` | `poc_s3_bucket` | Input — JuiceFS S3 bucket |
 | `sales-api /api/sales/events` | `http_endpoint` | Input — HTTP REST |
 | `sales_ranks` | `poc_db_table` | Output — sink table |
 | `top_cities_latest` | `poc_db_table` | Output — PostgreSQL view |
@@ -200,7 +213,7 @@ Each run adds a new Process node to Atlas. The full lineage visible from `sales_
 
 ```
 source_sales (PostgreSQL) ──┐
-sales-csv    (RustFS S3)  ──┼──► Flink BatchJob ──► sales_ranks ──► VIEW ──► top_cities_latest
+sales-csv    (JuiceFS S3)  ──┼──► Flink BatchJob ──► sales_ranks ──► VIEW ──► top_cities_latest
 sales-api    (HTTP)       ──┘                                   └──► VIEW ──► top_salesmen_latest
 ```
 

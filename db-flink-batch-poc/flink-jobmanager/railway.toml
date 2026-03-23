@@ -1,2 +1,1 @@
 [deploy]
-  startCommand = "/bin/sh -c 'mkdir -p /opt/flink/plugins/s3-fs-hadoop && cp /opt/flink/opt/flink-s3-fs-hadoop-*.jar /opt/flink/plugins/s3-fs-hadoop/ && cat >> /opt/flink/conf/flink-conf.yaml <<\"EOF\"\nfs.s3a.endpoint: http://rustfs.railway.internal:9000\nfs.s3a.access.key: rustfsaccess\nfs.s3a.secret.key: rustfssecret\nfs.s3a.path.style.access: true\nfs.s3a.connection.ssl.enabled: false\nfs.s3a.aws.credentials.provider: org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider\nEOF\ncat /opt/flink/conf/flink-conf.yaml && /docker-entrypoint.sh jobmanager'"

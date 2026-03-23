@@ -41,7 +41,7 @@ docker run --rm \
   -v "$JAR":/job.jar \
   -v "$METRICS_DIR":/metrics \
   -e METRICS_FILE=/metrics/job-metrics.json \
-  -e RUSTFS_BUCKET=sales-csv \
+  -e JUICEFS_BUCKET=sales-csv \
   -e SOURCE_DB_URL=jdbc:postgresql://postgres-source:5432/salesdb \
   -e SOURCE_DB_USER=poc \
   -e SOURCE_DB_PASS=poc123 \

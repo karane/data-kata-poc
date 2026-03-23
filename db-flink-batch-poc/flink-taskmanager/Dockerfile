@@ -6,3 +6,8 @@ RUN wget -q -O /opt/flink/lib/flink-metrics-prometheus-2.0.0.jar \
 ENV HADOOP_CONF_DIR=/opt/flink/conf
 ENV HADOOP_HOME=/opt/hadoop
 ENV PATH=$PATH:$HADOOP_HOME/bin
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+ENTRYPOINT ["/start.sh"]

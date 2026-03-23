@@ -1,0 +1,17 @@
+[build]
+  builder = "DOCKERFILE"
+  dockerfilePath = "Dockerfile"
+
+[deploy]
+  image = "juicedata/juicefs-gateway:latest"
+  healthcheckPath = "curl -s --max-time 5 http://localhost:9000/ -o /dev/null"
+  healthcheckTimeout = 5
+  healthcheckInterval = 5
+  healthcheckRetries = 10
+  healthcheckStartPeriod = 10
+  environment = [
+    "JFS_ACCESS_KEY=juicefsaccess",
+    "JFS_SECRET_KEY=juicefssecret",
+    "JFS_BUCKET=sales-csv",
+    "JFS_METASTORE_URL={{REDIS_URL}}"
+  ]
