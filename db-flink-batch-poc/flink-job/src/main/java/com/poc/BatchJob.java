@@ -2,6 +2,7 @@ package com.poc;
 
 import com.poc.BatchJob.CityAcc;
 import com.poc.BatchJob.SalesmanAcc;
+import com.poc.model.OrderEvent;
 import com.poc.model.SaleEvent;
 import com.poc.model.SalesRank;
 import com.poc.source.CsvSaleEventFormat;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -153,12 +155,26 @@ public class BatchJob {
             .map(new CountingMap<>("records_from_db"))
             .returns(TypeInformation.of(SaleEvent.class));
 
-        // SOURCE 3 -- HTTP / sales-api
+        // SOURCE 3 -- HTTP / sales-api (OrderEvent schema, mapped to SaleEvent)
         // Fetched eagerly before graph construction so fromCollection() is used,
         // which is a proper bounded source compatible with BATCH execution mode.
-        List<SaleEvent> apiEvents = HttpSalesBatchSource.fetchAll(salesApiUrl);
+        List<OrderEvent> apiOrders = HttpSalesBatchSource.fetchAll(salesApiUrl);
         DataStream<SaleEvent> fromApi = env
-            .fromCollection(apiEvents, TypeInformation.of(SaleEvent.class))
+            .fromCollection(apiOrders, TypeInformation.of(OrderEvent.class))
+            .map(o -> {
+                SaleEvent e = new SaleEvent();
+                e.saleId       = o.orderId;
+                e.salesmanId   = o.sellerId;
+                e.salesmanName = o.sellerName;
+                e.city         = o.location;
+                e.region       = "Unknown";
+                e.productId    = o.productId;
+                e.amount       = o.totalPrice;
+                e.eventTime    = OffsetDateTime.parse(o.orderDate).toInstant().toEpochMilli();
+                e.source       = o.source;
+                return e;
+            })
+            .returns(TypeInformation.of(SaleEvent.class))
             .name("Source: HTTP/API");
 
         // UNION -- merge all three sources into one bounded stream
@@ -282,7 +298,7 @@ public class BatchJob {
                 "{\"recordsFromDb\":%d,\"recordsFromS3\":%d,\"recordsFromApi\":%d,\"recordsWritten\":%d,\"durationMs\":%d}",
                 dbCount != null ? dbCount : 0L,
                 s3Count != null ? s3Count : 0L,
-                (long) apiEvents.size(),
+                (long) apiOrders.size(),
                 written,
                 durationMs);
             try (java.io.FileWriter fw = new java.io.FileWriter(metricsFilePath)) {

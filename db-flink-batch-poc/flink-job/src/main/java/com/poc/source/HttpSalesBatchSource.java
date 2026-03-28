@@ -2,7 +2,7 @@ package com.poc.source;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.poc.model.SaleEvent;
+import com.poc.model.OrderEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,14 +14,13 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Fetches one batch of SaleEvent objects from the sales-api REST endpoint.
+ * Fetches one batch of OrderEvent objects from the sales-api REST endpoint.
  *
  * Designed for BATCH mode: called once before the Flink graph is built so the
  * result can be handed to env.fromCollection(), which is a proper bounded source.
  *
  * Usage:
- *   List<SaleEvent> events = HttpSalesBatchSource.fetchAll("http://sales-api:8080");
- *   DataStream<SaleEvent> fromApi = env.fromCollection(events, TypeInformation.of(SaleEvent.class));
+ *   List<OrderEvent> events = HttpSalesBatchSource.fetchAll("http://sales-api:8080");
  */
 public class HttpSalesBatchSource {
 
@@ -32,7 +31,7 @@ public class HttpSalesBatchSource {
 
     private HttpSalesBatchSource() {}
 
-    public static List<SaleEvent> fetchAll(String apiBaseUrl) {
+    public static List<OrderEvent> fetchAll(String apiBaseUrl) {
         String endpoint = apiBaseUrl + "/api/sales/events";
         log.info("[HttpSalesBatchSource] Fetching from {}", endpoint);
         try {
@@ -48,7 +47,7 @@ public class HttpSalesBatchSource {
             }
 
             try (InputStream in = conn.getInputStream()) {
-                SaleEvent[] batch = MAPPER.readValue(in, SaleEvent[].class);
+                OrderEvent[] batch = MAPPER.readValue(in, OrderEvent[].class);
                 log.info("[HttpSalesBatchSource] Received {} events from API", batch.length);
                 return Arrays.asList(batch);
             } finally {
