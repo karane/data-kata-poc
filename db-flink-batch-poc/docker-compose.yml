@@ -180,7 +180,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
@@ -205,6 +205,52 @@ services:
       retries: 20
       start_period: 120s
 
+  # -- Marquez (OpenLineage backend)
+  postgres-marquez:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: marquez
+      POSTGRES_PASSWORD: marquez
+      POSTGRES_DB: marquez
+    volumes:
+      - postgres-marquez-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marquez -d marquez"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  marquez:
+    image: marquezproject/marquez:latest
+    ports:
+      - "5001:5000"   # Marquez API
+      - "5002:5001"   # Marquez Admin
+    depends_on:
+      postgres-marquez:
+        condition: service_healthy
+    environment:
+      MARQUEZ_CONFIG: /etc/marquez/marquez.yml
+    volumes:
+      - ./marquez/marquez.yml:/etc/marquez/marquez.yml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5000/api/v1/namespaces"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 15s
+
+  marquez-web:
+    image: marquezproject/marquez-web:latest
+    ports:
+      - "3002:3000"
+    environment:
+      MARQUEZ_HOST: marquez
+      MARQUEZ_PORT: 5000
+      WEB_PORT: 3000
+    depends_on:
+      marquez:
+        condition: service_healthy
+
   # -- Job Submitter
   # Builds the fat JAR, submits to the cluster, and blocks until the job finishes.
   # Waits for sales-csv-generator to finish so RustFS files are present before the job runs.
@@ -224,6 +270,8 @@ services:
       sales-api:
         condition: service_healthy
       atlas:
+        condition: service_started
+      marquez:
         condition: service_healthy
     environment:
       <<: *flink-env
@@ -237,6 +285,8 @@ services:
       ATLAS_RUSTFS_PORT: "9000"
       ATLAS_SALES_API_HOST: sales-api
       ATLAS_SALES_API_PORT: "8080"
+      MARQUEZ_URL: http://marquez:5000
+      MARQUEZ_NAMESPACE: sales-batch-poc
       METRICS_FILE: /tmp/job-metrics.json
       FLINK_PROPERTIES: |
         s3.access-key: rustfsaccess
@@ -281,10 +331,13 @@ services:
         echo 'Submitting batch job...'
         flink run -m flink-jobmanager:8081 -c com.poc.BatchJob /opt/flink/usrlib/flink-job.jar --from $$JOB_FROM_DATE --to $$JOB_TO_DATE
         echo 'Batch job completed.'
-        java -cp /opt/flink/usrlib/flink-job.jar com.poc.LineageReporter --from $$JOB_FROM_DATE --to $$JOB_TO_DATE --run-id $$(date +%s%3N) --metrics-file /tmp/job-metrics.json
+        RUN_ID=$$(date +%s%3N)
+        java -cp /opt/flink/usrlib/flink-job.jar com.poc.LineageReporter --from $$JOB_FROM_DATE --to $$JOB_TO_DATE --run-id $$RUN_ID --metrics-file /tmp/job-metrics.json
+        java -cp /opt/flink/usrlib/flink-job.jar com.poc.OpenLineageReporter --from $$JOB_FROM_DATE --to $$JOB_TO_DATE --run-id $$RUN_ID --metrics-file /tmp/job-metrics.json
 
 volumes:
   postgres-source-data:
   postgres-sink-data:
+  postgres-marquez-data:
   prometheus-data:
   grafana-data:
